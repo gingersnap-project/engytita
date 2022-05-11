@@ -1,0 +1,22 @@
+[package]
+name = "engytita-test-filter"
+version = "0.1.0"
+authors = ["The Engytita team"]
+edition = "2021"
+
+[lib]
+path = "src/lib.rs"
+crate-type = ["cdylib"]
+
+[dependencies]
+#getrandom = { version = "0.2.6", features = ["custom"] }
+getrandom = { version = "0.2.6", features = ["js"] }
+log = "0.4.17"
+proxy-wasm = "0.2.0"
+stretto = { version = "0.4.3", features = ["sync"] }
+
+
+# Optimise for size.
+[profile.release]
+lto = true
+opt-level = 's'
