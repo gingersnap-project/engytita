@@ -2,6 +2,7 @@ IMG_REGISTRY ?= localhost:5001
 CLIENT_IMG ?= $(IMG_REGISTRY)/client
 SERVER_IMG ?= $(IMG_REGISTRY)/server
 POSTGRES_IMG ?= $(IMG_REGISTRY)/postgres
+ENVOY_IMG ?= $(IMG_REGISTRY)/envoy
 
 export CONTAINER_TOOL ?= docker
 
@@ -50,13 +51,28 @@ postgres-image:
 postgres-push:
 	$(CONTAINER_TOOL) push $(POSTGRES_IMG)
 
+.PHONY: envoy-image
+## Build the envoy image
+envoy-image:
+	$(CONTAINER_TOOL) build test/filter -t $(ENVOY_IMG)
+
+.PHONY: envoy-local-image
+## Build the envoy image with a locally compiled WASM filter
+envoy-local-image:
+	$(CONTAINER_TOOL) build test/filter -t $(ENVOY_IMG) -f test/filter/Dockerfile.local
+
+.PHONY: envoy-push
+## Push the envoy image
+envoy-push:
+	$(CONTAINER_TOOL) push $(ENVOY_IMG)
+
 .PHONY: build-all-images
 ## Build all images
-build-all-images: client-image server-image postgres-image
+build-all-images: client-image server-image postgres-image envoy-image
 
 .PHONY: push-all-images
-## Puash all images
-push-all-images: client-push server-push postgres-push
+## Push all images
+push-all-images: client-push server-push postgres-push envoy-push
 
 .PHONY: kind-cluster
 ## Create a local kind cluster with image registry localhost:5000
