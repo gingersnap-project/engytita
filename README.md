@@ -12,3 +12,7 @@ This creates a local kind cluster that's backed by a local docker repository ava
 required images are built locally and then pushed to the docker repository so that they can be consumed by k8s components.
 Upon completion, all services are deployed and the client application is exposed via a NodePort so that it's endpoints
 can be access on the local machine.
+
+# Runnig on Openshift
+1. `make kind-cluster build-all-images push-all-images deploy IMG_REGISTRY=quay.io/engytita OPENSHIFT=true`
+2. Access client application via created host/port: `kubectl -n demo get route client`
