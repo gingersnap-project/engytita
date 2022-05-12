@@ -9,6 +9,12 @@ ifeq ($(NATIVE),true)
 	QUARKUS_BUILD_ARGS = "-Pnative -Dquarkus.native.container-build=true"
 endif
 
+ifeq ($(OPENSHIFT),true)
+	DEPLOY_BASE = openshift
+else
+	DEPLOY_BASE = kind
+endif
+
 .DEFAULT_GOAL := help
 
 help:
@@ -71,13 +77,13 @@ deploy:
 	kubectl -n demo wait deployment infinispan --for condition=Available=True --timeout=90s
 	kubectl -n demo wait deployment redis --for condition=Available=True --timeout=90s
 
-	cd test/deploy/app && kustomize edit set image client=$(CLIENT_IMG) server=$(SERVER_IMG)
-	kubectl kustomize test/deploy/app | kubectl -n demo apply -f -
+	cd test/deploy/app/$(DEPLOY_BASE) && kustomize edit set image client=$(CLIENT_IMG) server=$(SERVER_IMG)
+	kubectl kustomize test/deploy/app/$(DEPLOY_BASE) | kubectl -n demo apply -f -
 	kubectl -n demo wait deployment airport-server --for condition=Available=True --timeout=90s
 	kubectl -n demo wait deployment client --for condition=Available=True --timeout=90s
 
 .PHONY: undeploy
 ## Undeploy all components deployed via the "deploy" target
 undeploy:
-	kubectl kustomize test/deploy/app | kubectl -n demo delete -f - || true
+	kubectl kustomize test/deploy/app/$(DEPLOY_BASE) | kubectl -n demo delete -f - || true
 	kubectl kustomize test/deploy/data | kubectl -n demo delete -f - || true

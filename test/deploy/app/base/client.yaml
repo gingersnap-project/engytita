@@ -11,21 +11,6 @@ spec:
   selector:
     app: client
 ---
-apiVersion: v1
-kind: Service
-metadata:
-  name: client-external
-  namespace: demo
-spec:
-  type: NodePort
-  ports:
-    - port: 8080
-      protocol: TCP
-      targetPort: 8080
-      nodePort: 30000
-  selector:
-    app: client
----
 apiVersion: apps/v1
 kind: Deployment
 metadata:
