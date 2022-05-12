@@ -45,7 +45,7 @@ spec:
     spec:
       containers:
       - name: client
-        image: localhost:5001/client # TODO use Kustomize to make image configurable?
+        image: client:latest
         ports:
         - containerPort: 8080
         env:

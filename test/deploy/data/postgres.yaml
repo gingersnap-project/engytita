@@ -30,7 +30,7 @@ spec:
     spec:
       containers:
       - name: server
-        image: localhost:5001/postgres # TODO use Kustomize to make image configurable?
+        image: postgres:latest
         ports:
         - containerPort: 5432
         env:

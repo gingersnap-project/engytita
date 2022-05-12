@@ -30,7 +30,7 @@ spec:
     spec:
       containers:
       - name: server
-        image: localhost:5001/server # TODO use Kustomize to make image configurable?
+        image: server:latest
         ports:
         - containerPort: 8080
         env:
