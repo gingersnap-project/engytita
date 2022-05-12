@@ -1,0 +1,3 @@
+FROM envoyproxy/envoy:v1.21-latest
+COPY config /config
+COPY target /target/
