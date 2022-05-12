@@ -1,0 +1,40 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres
+  namespace: demo
+spec:
+  type: ClusterIP
+  ports:
+    - port: 5432
+      protocol: TCP
+  selector:
+    app: postgres
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: postgres
+  namespace: demo
+  labels:
+    app: postgres
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: postgres
+  template:
+    metadata:
+      labels:
+        app: postgres
+    spec:
+      containers:
+      - name: server
+        image: localhost:5001/postgres # TODO use Kustomize to make image configurable?
+        ports:
+        - containerPort: 5432
+        env:
+          - name: POSTGRES_USER
+            value: demo
+          - name: POSTGRES_PASSWORD
+            value: demo

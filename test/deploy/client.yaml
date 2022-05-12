@@ -1,0 +1,53 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: client
+  namespace: demo
+spec:
+  type: ClusterIP
+  ports:
+    - port: 8080
+      protocol: TCP
+  selector:
+    app: client
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: client-external
+  namespace: demo
+spec:
+  type: NodePort
+  ports:
+    - port: 8080
+      protocol: TCP
+      targetPort: 8080
+      nodePort: 30000
+  selector:
+    app: client
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: client
+  namespace: demo
+  labels:
+    app: client
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: client
+  template:
+    metadata:
+      labels:
+        app: client
+    spec:
+      containers:
+      - name: client
+        image: localhost:5001/client # TODO use Kustomize to make image configurable?
+        ports:
+        - containerPort: 8080
+        env:
+          - name: JAVA_OPTS_APPEND
+            value: -Dquarkus.http.port=8080 -Dquarkus.rest-client.airports.url=http://airport-server.demo.svc.cluster.local:8080 -Dquarkus.infinispan-client.server-list=infinispan.demo.svc.cluster.local:11222 -Dquarkus.redis.hosts=redis://redis.demo.svc.cluster.local:6379
