@@ -64,22 +64,20 @@ kind-cluster:
 ## Deploy all components to the "demo" namespace on the local kind cluster
 deploy:
 	kubectl create namespace demo || true
-	kubectl -n demo apply -f test/deploy/postgres.yaml
-	kubectl -n demo apply -f test/deploy/infinispan.yaml
-	kubectl -n demo apply -f test/deploy/redis.yaml
+	cd test/deploy/data && kustomize edit set image postgres=$(POSTGRES_IMG)
+	kubectl kustomize test/deploy/data | kubectl -n demo apply -f -
 # Wait for all backend services to be available before starting the client and server
 	kubectl -n demo wait deployment postgres --for condition=Available=True --timeout=90s
 	kubectl -n demo wait deployment infinispan --for condition=Available=True --timeout=90s
 	kubectl -n demo wait deployment redis --for condition=Available=True --timeout=90s
 
-	kubectl -n demo apply -f test/deploy/server.yaml
-	kubectl -n demo apply -f test/deploy/client.yaml
+	cd test/deploy/app && kustomize edit set image client=$(CLIENT_IMG) server=$(SERVER_IMG)
+	kubectl kustomize test/deploy/app | kubectl -n demo apply -f -
+	kubectl -n demo wait deployment airport-server --for condition=Available=True --timeout=90s
+	kubectl -n demo wait deployment client --for condition=Available=True --timeout=90s
 
 .PHONY: undeploy
 ## Undeploy all components deployed via the "deploy" target
 undeploy:
-	kubectl -n demo delete -f test/deploy/postgres.yaml || true
-	kubectl -n demo delete -f test/deploy/server.yaml || true
-	kubectl -n demo delete -f test/deploy/client.yaml || true
-	kubectl -n demo delete -f test/deploy/infinispan.yaml || true
-	kubectl -n demo delete -f test/deploy/redis.yaml || true
+	kubectl kustomize test/deploy/app | kubectl -n demo delete -f - || true
+	kubectl kustomize test/deploy/data | kubectl -n demo delete -f - || true
