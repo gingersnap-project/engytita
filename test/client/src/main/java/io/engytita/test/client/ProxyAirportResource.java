@@ -7,11 +7,11 @@ import org.eclipse.microprofile.rest.client.inject.RestClient;
 
 import io.smallrye.mutiny.Uni;
 
-@Path("/adirectx")
-public class DirectAirportResource {
+@Path("/airproxy")
+public class ProxyAirportResource {
 
     @RestClient
-    AirportService airportService;
+    AirportProxyService airportService;
 
 
     @GET
