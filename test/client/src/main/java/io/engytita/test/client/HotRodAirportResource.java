@@ -10,7 +10,7 @@ import org.infinispan.client.hotrod.RemoteCache;
 import io.quarkus.infinispan.client.Remote;
 import io.smallrye.mutiny.Uni;
 
-@Path("/airports-hotrod")
+@Path("/ahotrodx")
 public class HotRodAirportResource {
    @Inject
    @Remote("airports")

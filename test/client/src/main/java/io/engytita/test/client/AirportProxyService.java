@@ -9,8 +9,8 @@ import org.eclipse.microprofile.rest.client.inject.RegisterRestClient;
 import io.smallrye.mutiny.Uni;
 
 @Path("/airports")
-@RegisterRestClient(configKey = "airports")
-public interface AirportService {
+@RegisterRestClient(configKey = "airports-proxy")
+public interface AirportProxyService {
 
    @GET
    @Path("/{id}")
