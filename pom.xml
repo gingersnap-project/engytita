@@ -30,7 +30,6 @@
       </dependencies>
    </dependencyManagement>
    <modules>
-      <module>api</module>
       <module>test/server</module>
       <module>test/client</module>
       <module>test/proxy</module>
