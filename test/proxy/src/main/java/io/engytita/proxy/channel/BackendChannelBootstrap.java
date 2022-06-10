@@ -14,6 +14,8 @@ public class BackendChannelBootstrap {
             .group(fromCtx.channel().eventLoop())
             .channel(fromCtx.channel().getClass())
             .handler(handler)
+            /*.option(ChannelOption.SO_KEEPALIVE, true)
+            .option(ChannelOption.TCP_NODELAY, true)*/
             .connect(connectionContext.getServerAddr().getHost(),
                   connectionContext.getServerAddr().getPort());
    }

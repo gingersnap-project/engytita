@@ -1,7 +1,7 @@
 package io.engytita.proxy.listener;
 
 import java.util.List;
-import java.util.Optional;
+import java.util.concurrent.CompletionStage;
 
 import io.engytita.proxy.ConnectionContext;
 import io.engytita.proxy.cache.ProxyCache;
@@ -21,10 +21,9 @@ public class ProxyCacheListener implements ProxyListener {
    }
 
    @Override
-   public Optional<FullHttpResponse> onHttp1Request(ConnectionContext connectionContext, FullHttpRequest request) {
+   public CompletionStage<FullHttpResponse> onHttp1Request(ConnectionContext connectionContext, FullHttpRequest request) {
       connectionContext.clientChannel().attr(URI_KEY).set(request.uri());
-      FullHttpResponse response = cache.get(request.uri());
-      return response == null ? Optional.empty() : Optional.of(response.retain());
+      return cache.get(request.uri()).thenApply(r -> r == null ? null : r.retain());
    }
 
    @Override

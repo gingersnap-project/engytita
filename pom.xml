@@ -16,6 +16,7 @@
       <quarkus.platform.artifact-id>quarkus-bom</quarkus.platform.artifact-id>
       <quarkus.platform.group-id>io.quarkus.platform</quarkus.platform.group-id>
       <quarkus.platform.version>2.9.2.Final</quarkus.platform.version>
+      <netty.version>4.1.77.Final</netty.version>
       <surefire-plugin.version>3.0.0-M5</surefire-plugin.version>
    </properties>
    <dependencyManagement>

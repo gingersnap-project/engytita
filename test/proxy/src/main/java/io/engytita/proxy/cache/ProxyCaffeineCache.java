@@ -1,5 +1,8 @@
 package io.engytita.proxy.cache;
 
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionStage;
+
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
 
@@ -11,12 +14,13 @@ public class ProxyCaffeineCache<K, V> implements ProxyCache<K, V> {
    }
 
    @Override
-   public V get(K key) {
-      return cache.getIfPresent(key);
+   public CompletionStage<V> get(K key) {
+      return CompletableFuture.completedFuture(cache.getIfPresent(key));
    }
 
    @Override
-   public void put(K key, V value) {
+   public CompletionStage<Void> put(K key, V value) {
       cache.put(key, value);
+      return CompletableFuture.completedFuture(null);
    }
 }

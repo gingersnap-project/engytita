@@ -1,7 +1,9 @@
 package io.engytita.proxy.cache;
 
-public interface ProxyCache<K, V> {
-   V get(K key);
+import java.util.concurrent.CompletionStage;
 
-   void put(K key, V value);
+public interface ProxyCache<K, V> {
+   CompletionStage<V> get(K key);
+
+   CompletionStage<Void> put(K key, V value);
 }

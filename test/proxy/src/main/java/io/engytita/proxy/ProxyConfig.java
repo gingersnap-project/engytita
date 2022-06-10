@@ -22,6 +22,8 @@ public class ProxyConfig {
 
    private ProxyMode proxyMode;
 
+   private ProxyTransport proxyTransport;
+
    private String host;
    private int port;
 
@@ -43,6 +45,7 @@ public class ProxyConfig {
    // Default values
    public ProxyConfig() {
       proxyMode = ProxyMode.HTTP;
+      proxyTransport = ProxyTransport.NIO;
 
       host = "127.0.0.1";
       port = 9090;
@@ -56,6 +59,14 @@ public class ProxyConfig {
 
       listeners = new ProxyListeners();
       detectors = Collections.singletonList(Http1ProtocolDetector.INSTANCE);
+   }
+
+   public ProxyTransport getProxyTransport() {
+      return proxyTransport;
+   }
+
+   public void setProxyTransport(ProxyTransport proxyTransport) {
+      this.proxyTransport = proxyTransport;
    }
 
    public String getRemoteHost() {

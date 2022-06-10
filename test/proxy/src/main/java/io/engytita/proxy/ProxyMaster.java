@@ -10,10 +10,10 @@ import io.netty.channel.ChannelHandlerContext;
 
 public class ProxyMaster {
 
-   private ProxyConfig config;
-   private BackendChannelBootstrap backendChannelBootstrap;
-   private ProxyListenerManagerProvider listenerProvider;
-   private CertManager certManager;
+   private final ProxyConfig config;
+   private final BackendChannelBootstrap backendChannelBootstrap;
+   private final ProxyListenerManagerProvider listenerProvider;
+   private final CertManager certManager;
 
    public ProxyMaster(ProxyConfig config,
                       BackendChannelBootstrap backendChannelBootstrap) {

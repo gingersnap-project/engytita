@@ -7,7 +7,6 @@ import static io.netty.util.ReferenceCountUtil.retain;
 import static java.lang.System.currentTimeMillis;
 
 import java.util.List;
-import java.util.Optional;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicLong;
@@ -109,25 +108,25 @@ public class Http1EventHandler extends ChannelDuplexHandler {
 
    @Override
    public void channelRead(ChannelHandlerContext ctx, Object msg) {
-      if (!(msg instanceof FullHttpRequest)) {
+      if (!(msg instanceof FullHttpRequest request)) {
          ctx.fireChannelRead(msg);
          return;
       }
 
-      FullHttpRequest request = (FullHttpRequest) msg;
-      Optional<FullHttpResponse> response = listener.onHttp1Request(connectionContext, (FullHttpRequest) msg);
-      if (response.isPresent()) {
-         try {
-            sendResponse(ctx, request, response.get());
-         } finally {
-            request.release();
+      listener.onHttp1Request(connectionContext, (FullHttpRequest) msg).thenAccept(response -> {
+         if (response != null) {
+            try {
+               sendResponse(ctx, request, response);
+            } finally {
+               request.release();
+            }
+            return;
          }
-         return;
-      }
 
-      this.requests.add(request.retain());
-      this.requestTime = currentTimeMillis();
-      ctx.fireChannelRead(msg);
+         this.requests.add(request.retain());
+         this.requestTime = currentTimeMillis();
+         ctx.fireChannelRead(msg);
+      });
    }
 
    private void sendResponse(ChannelHandlerContext ctx, FullHttpRequest request, FullHttpResponse response) {

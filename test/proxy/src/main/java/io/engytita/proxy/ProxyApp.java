@@ -26,6 +26,9 @@ public class ProxyApp implements Runnable {
    @CommandLine.Option(names = {"-c", "--cache"}, description = "Enable proxy cache", defaultValue = "false")
    boolean cache;
 
+   @CommandLine.Option(names = {"-t", "--transport"}, description = "Select a transport (NIO, EPOLL, URING)", defaultValue = "NIO")
+   ProxyTransport transport;
+
    @Override
    public void run() {
       ProxyConfig config = new ProxyConfig();
@@ -34,6 +37,7 @@ public class ProxyApp implements Runnable {
       config.setRemotePort(backendPort);
       config.setRemoteHost(backendHost);
       config.setMaxContentLength(maxContentLength);
+      config.setProxyTransport(transport);
       if (cache) {
          config.getListeners().addFirst(new ProxyCacheListener());
       }

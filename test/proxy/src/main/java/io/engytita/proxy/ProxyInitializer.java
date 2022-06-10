@@ -13,7 +13,7 @@ public class ProxyInitializer extends ChannelInitializer<Channel> {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ProxyInitializer.class);
 
-    private ProxyMaster master;
+    private final ProxyMaster master;
 
     public ProxyInitializer(ProxyConfig config) {
         this(new ProxyMaster(config, new BackendChannelBootstrap()));

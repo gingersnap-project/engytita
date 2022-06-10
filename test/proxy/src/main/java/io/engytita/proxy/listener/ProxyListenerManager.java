@@ -2,8 +2,11 @@ package io.engytita.proxy.listener;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionStage;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
@@ -21,6 +24,7 @@ import io.netty.handler.codec.http.websocketx.WebSocketFrame;
 
 public class ProxyListenerManager implements ProxyListener {
 
+   public static final CompletableFuture<FullHttpResponse> COMPLETED_NULL_FUTURE = CompletableFuture.completedFuture(null);
    private final List<ProxyListener> listeners;
    private final List<ProxyListener> reversedListeners;
 
@@ -48,10 +52,23 @@ public class ProxyListenerManager implements ProxyListener {
    }
 
    @Override
-   public Optional<FullHttpResponse> onHttp1Request(ConnectionContext connectionContext, FullHttpRequest request) {
-      Function<ProxyListener, Stream<FullHttpResponse>> apply = listener -> listener
-            .onHttp1Request(connectionContext, request).stream();
-      return listeners.stream().flatMap(apply).findFirst();
+   public CompletionStage<FullHttpResponse> onHttp1Request(ConnectionContext connectionContext, FullHttpRequest request) {
+      return findFirst(listeners.iterator(), connectionContext, request);
+   }
+
+   private CompletionStage<FullHttpResponse> findFirst(Iterator<ProxyListener> i, ConnectionContext connectionContext, FullHttpRequest request) {
+      if (i.hasNext()) {
+         CompletableFuture<FullHttpResponse> f = i.next().onHttp1Request(connectionContext, request).toCompletableFuture();
+         if (f.isDone()) {
+            FullHttpResponse response = f.getNow(null);
+            if (response != null) {
+               return CompletableFuture.completedFuture(response);
+            }
+         }
+         return f.thenCompose(r -> r != null ? CompletableFuture.completedFuture(r) : findFirst(i, connectionContext, request));
+      } else {
+         return COMPLETED_NULL_FUTURE;
+      }
    }
 
    @Override

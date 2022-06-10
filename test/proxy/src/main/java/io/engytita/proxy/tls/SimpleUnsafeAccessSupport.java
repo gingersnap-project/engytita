@@ -10,6 +10,8 @@ import java.io.IOException;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionStage;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
@@ -63,19 +65,15 @@ public class SimpleUnsafeAccessSupport implements UnsafeAccessSupport {
 
    class Interceptor implements ProxyListener {
       @Override
-      public Optional<FullHttpResponse> onHttp1Request(ConnectionContext connectionContext, FullHttpRequest request) {
+      public CompletionStage<FullHttpResponse> onHttp1Request(ConnectionContext connectionContext, FullHttpRequest request) {
          if (connectionContext.getServerAddr() == null || !accepted.containsKey(connectionContext.getServerAddr())) {
-            return Optional.empty();
+            return CompletableFuture.completedFuture(null);
          }
-         switch (accepted.get(connectionContext.getServerAddr())) {
-            case ASK:
-               return handleAskHttp1(connectionContext, request);
-            case DENY:
-               return Optional.of(createDenyResponse());
-            case ACCEPT:
-            default:
-               return Optional.empty();
-         }
+         return switch (accepted.get(connectionContext.getServerAddr())) {
+            case ASK -> CompletableFuture.completedFuture(handleAskHttp1(connectionContext, request));
+            case DENY -> CompletableFuture.completedFuture(createDenyResponse());
+            case ACCEPT -> CompletableFuture.completedFuture(null);
+         };
       }
 
       @Override
@@ -83,31 +81,27 @@ public class SimpleUnsafeAccessSupport implements UnsafeAccessSupport {
          if (context.getServerAddr() == null || !accepted.containsKey(context.getServerAddr())) {
             return Optional.empty();
          }
-         switch (accepted.get(context.getServerAddr())) {
-            case ASK:
-               return handleAskHttp2(context, request);
-            case DENY:
-               return Optional.of(Http2FramesWrapper
-                     .builder(request.getStreamId())
-                     .response(createDenyResponse())
-                     .build());
-            case ACCEPT:
-            default:
-               return Optional.empty();
-         }
+         return switch (accepted.get(context.getServerAddr())) {
+            case ASK -> handleAskHttp2(context, request);
+            case DENY -> Optional.of(Http2FramesWrapper
+                  .builder(request.getStreamId())
+                  .response(createDenyResponse())
+                  .build());
+            case ACCEPT -> Optional.empty();
+         };
       }
 
-      private Optional<FullHttpResponse> handleAskHttp1(ConnectionContext context, FullHttpRequest request) {
+      private FullHttpResponse handleAskHttp1(ConnectionContext context, FullHttpRequest request) {
          if (request.uri().endsWith(ACCEPT_MAGIC)) {
             request.setUri(request.uri().replace(ACCEPT_MAGIC, ""));
             accepted.put(context.getServerAddr(), UnsafeAccess.ACCEPT);
-            return Optional.empty();
+            return null;
          }
          if (request.uri().endsWith(DENY_MAGIC)) {
             accepted.put(context.getServerAddr(), UnsafeAccess.DENY);
-            return Optional.of(createDenyResponse());
+            return createDenyResponse();
          }
-         return Optional.of(createAskResponse(request.uri()));
+         return createAskResponse(request.uri());
       }
 
       private Optional<Http2FramesWrapper> handleAskHttp2(

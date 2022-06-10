@@ -3,6 +3,8 @@ package io.engytita.proxy.listener;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionStage;
 
 import io.engytita.proxy.ConnectionContext;
 import io.engytita.proxy.event.ForwardEvent;
@@ -51,8 +53,8 @@ public interface ProxyListener {
     * @param request           the request
     * @return response if you want to intercept the request
     */
-   default Optional<FullHttpResponse> onHttp1Request(ConnectionContext connectionContext, FullHttpRequest request) {
-      return Optional.empty();
+   default CompletionStage<FullHttpResponse> onHttp1Request(ConnectionContext connectionContext, FullHttpRequest request) {
+      return CompletableFuture.completedFuture(null);
    }
 
    /**

@@ -1,41 +1,63 @@
 package io.engytita.proxy;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.jboss.logging.Logger;
 
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.Channel;
+import io.netty.channel.EventLoopGroup;
+import io.netty.channel.epoll.EpollEventLoopGroup;
+import io.netty.channel.epoll.EpollServerSocketChannel;
 import io.netty.channel.nio.NioEventLoopGroup;
+import io.netty.channel.socket.ServerSocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
+import io.netty.incubator.channel.uring.IOUringEventLoopGroup;
+import io.netty.incubator.channel.uring.IOUringServerSocketChannel;
 
 public class Proxy {
-   private static final Logger LOGGER = LoggerFactory.getLogger(Proxy.class);
+   private static final Logger LOGGER = Logger.getLogger(Proxy.class);
 
    private final ProxyConfig config;
 
-   private NioEventLoopGroup bossGroup;
-   private NioEventLoopGroup workerGroup;
+   private EventLoopGroup bossGroup;
+   private EventLoopGroup workerGroup;
    private ProxyStatus status = ProxyStatus.NOTCONFIGURED;
 
    public Proxy(ProxyConfig config) {
       this.config = config;
    }
 
+   private EventLoopGroup createEventLoopGroup(int nThreads) {
+      return switch (config.getProxyTransport()) {
+         case NIO -> new NioEventLoopGroup(nThreads);
+         case EPOLL -> new EpollEventLoopGroup(nThreads);
+         case URING -> new IOUringEventLoopGroup(nThreads);
+      };
+   }
+
+   private Class<? extends ServerSocketChannel> getServerChannelClass() {
+      return switch (config.getProxyTransport()) {
+         case NIO -> NioServerSocketChannel.class;
+         case EPOLL -> EpollServerSocketChannel.class;
+         case URING -> IOUringServerSocketChannel.class;
+      };
+   }
+
    public void start() throws Exception {
-      bossGroup = new NioEventLoopGroup(1);
-      workerGroup = new NioEventLoopGroup();
+      bossGroup = createEventLoopGroup(1);
+      workerGroup = createEventLoopGroup(0);
       try {
          ServerBootstrap bootstrap = new ServerBootstrap()
                .group(bossGroup, workerGroup)
-               .channel(NioServerSocketChannel.class)
-               .childHandler(new ProxyInitializer(config));
+               .channel(getServerChannelClass())
+               .childHandler(new ProxyInitializer(config))
+               /*.childOption(ChannelOption.SO_KEEPALIVE, true)
+               .childOption(ChannelOption.TCP_NODELAY, true)*/;
          Channel channel = bootstrap
                .bind(config.getHost(), config.getPort())
                .sync()
                .channel();
 
-         LOGGER.info("proxy is listening at {}:{}",
-               config.getHost(), config.getPort());
+         LOGGER.infof("proxy at %s:%d -> %s:%d using %s transport", config.getHost(), config.getPort(), config.getRemoteHost(), config.getRemotePort(), config.getProxyTransport());
 
          status = ProxyStatus.STARTED;
 
